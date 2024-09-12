@@ -74,6 +74,69 @@ Para manter aumentar a chance de anonimidade plena, é preciso usar a técnica d
 
 
 ##########################################################################################
+REQUISITO: OBFS4PROXY
+
+***Instalação obfs4proxy para rotear usar as bridges no tor hidden service no Linux Debian
+
+via apt e pacote .deb do site oficial Debian
+
+https://packages.debian.org/buster/amd64/obfs4proxy/
+
+***via apt
+
+
+sudo echo "deb http://security.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list; 
+
+
+sudo apt update -y;
+
+
+sudo apt install obfs4proxy -y;
+
+
+
+***via .deb
+
+
+http://security.debian.org/debian-security/pool/updates/main/o/obfs4proxy/
+
+
+
+***Instalação
+
+
+
+sudo dpkg -i obfs4proxy_0.0.7-4+deb10u1_amd64.deb;
+
+
+
+#remover se precisar:
+
+
+
+dpkg --list;
+
+
+dpkg --list | grep obfs4proxy;
+
+
+
+sudo dpkg --remove nome-do-pacote;
+
+
+sudo dpkg --purge nome-do-pacote;
+
+
+sudo apt-get install -f;
+
+
+
+
+
+
+
+
+##########################################################################################
 
 
 
