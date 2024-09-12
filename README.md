@@ -74,3 +74,21 @@ Para manter aumentar a chance de anonimidade plena, é preciso usar a técnica d
 
 
 ##########################################################################################
+
+
+
+
+Doe monero para nos ajudar: 87JGuuwXzoMGwQAcSD7cvS7D7iacPpN2f5bVqETbUvCgdEmrPZa12gh5DSiKKRgdU7c5n5x1UvZLj8PQ7AAJSso5CQxgjak
+
+
+Página oficial de segurança digital:
+
+
+https://traderprofissional.com.br/seguranca-digital.aspx
+
+
+Vídeo tutorial youtube: atualizando...
+
+
+
+
