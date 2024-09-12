@@ -1,0 +1,555 @@
+#!/bin/bash
+#Tor Hidden Service Router
+#Working in Debian, Ubuntu and Fedora.
+
+#Checking TOR uid in /etc/passwd. Generally in Debian Tor uid is in user debian-tor.
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Tor-Bridger";
+echo "Roteador de todo o tráfego da máquina para a rede TOR cadastrando 3 bridges obfs4";
+echo "Desenvolvedor Leandro Santos (leandroibov) - https://www.traderprofissional.com.br/seguranca-digital.aspx";
+echo "__________________________________________________________________________________________________________________________________________________";
+if command -v pacman > /dev/null; then
+  TOR_UID=$(id -u tor)
+elif command -v apt > /dev/null; then
+  TOR_UID=$(id -u debian-tor)
+elif command -v dnf > /dev/null; then
+  TOR_UID=$(id -u toranon)
+else
+  echo "Unknown distro, Distro Desconhecida"
+  exit
+fi
+echo;
+
+# Tor's TransPort
+
+if ! command -v tor > /dev/null; then
+echo "__________________________________________________________________________________________________________________________________________________";
+  echo "Você precisa instalar o tor hidden service via apt! Não é seguro instalar sem pgp! Use o script: https://github.com/leandroibov/instala-tor-hidden-service ou siga o procedimento do site em https://support.torproject.org/apt/"
+  echo "__________________________________________________________________________________________________________________________________________________";
+  echo;
+  exit
+elif ! systemctl is-active tor.service > /dev/null; then
+  #Certificando que o tor service is running;
+echo;
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Certificando que o tor service está rodando;";
+echo "__________________________________________________________________________________________________________________________________________________";
+#Restartando o tor hidden service
+sudo echo "Desabilitando o tor hidden service";
+sudo echo "sudo systemctl disable tor.service;";
+sudo systemctl disable tor.service;
+sudo echo "Parando o tor hidden service";
+sudo echo "sudo systemctl stop tor.service;";
+sudo systemctl stop tor.service;
+sudo echo "Restartando o tor hidden service";
+sudo echo "sudo systemctl enable tor.service;";
+sudo systemctl enable tor.service;
+sudo echo "";
+sudo echo "sudo systemctl start tor.service;";
+sudo systemctl start tor.service;
+sudo echo "";
+sudo echo "sudo systemctl is-active tor.service;";
+sudo systemctl is-active tor.service;
+sudo echo "";
+elif ! command -v iptables > /dev/null; then
+echo "__________________________________________________________________________________________________________________________________________________";
+  echo "Você precisa instalar o pacote iptables no seu linux."
+  echo "__________________________________________________________________________________________________________________________________________________";
+  echo;
+  exit
+fi
+
+
+# Função para verificar se obfs4proxy está instalado
+check_obfs4proxy() {
+    if command -v obfs4proxy >/dev/null 2>&1; then
+        return 0 # obfs4proxy está instalado
+    else
+        return 1 # obfs4proxy não está instalado
+    fi
+}
+
+# Verifica se obfs4proxy está instalado
+if check_obfs4proxy; then
+echo;
+    echo "obfs4proxy está instalado. "
+ 
+    ##############
+    ##############
+    
+    
+    
+    
+    
+
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Criando backups do arquivo original torrc - cp -r /etc/tor/torrc /etc/tor/torrc.bak;"
+echo "__________________________________________________________________________________________________________________________________________________";
+# Caminho do arquivo
+FILE="/etc/tor/torrc"
+
+# Verifica se o arquivo existe
+if [ -e "$FILE" ]; then
+    echo "O arquivo '$FILE' existe."
+else
+    # Cria o arquivo com permissões sudo
+    sudo touch "$FILE"
+    echo "Arquivo '$FILE' foi criado com sucesso pois não existia."
+    echo "Obtenha o arquivo original torrc desinstalando e apagando manualmente a pasta /etc/tor e reinstando o tor";
+    echo "Nesse momento o backup não será o original e poderá prejudicar o funcionando do script futuramente!";
+    
+fi
+echo;
+
+
+
+# Define o caminho do arquivo torrc e o arquivo de backup
+TORRC="/etc/tor/torrc"
+BACKUP="${TORRC}.bak"
+
+
+# Faz o backup do arquivo torrc
+cp -r "$TORRC" "$BACKUP"
+echo "Backup criado em $BACKUP"
+echo "/etc/tor/torrc.bak";
+echo;
+
+
+echo "Bridges devem ser copiadas inteiras para o arquivo torrc como são fornecidas com suas fingerprints e outros dados";
+echo "Exemplo1: obfs4 89.10.110.191:7624 7EC3CE9AB0640524C77FCF361C85E50A9E07F506 cert=i9s53eikMKz4BiU/yYyFpJaBfGm/9xvNf97dnkI6iPg3Ls5TRoyOwhaIQprLgPruBf/zYA iat-mode=2";
+echo;
+echo "Colete bridges do tipo obfs4 em https://bridges.torproject.org/bridges";
+echo "--------------------------------------------------------------";
+read -rp "Digite a primeira Bridge que deseja cadastrar no torrc:" bridge
+echo "--------------------------------------------------------------";
+echo "A bridge escolhida foi: $bridge"
+echo "";
+echo "--------------------------------------------------------------";
+read -rp "Digite a segunda Bridge que deseja cadastrar no torrc:" bridge2
+echo "--------------------------------------------------------------";
+echo "A bridge escolhida foi: $bridge2"
+echo "";
+echo "--------------------------------------------------------------";
+read -rp "Digite a terceira Bridge que deseja cadastrar no torrc:" bridge3
+echo "--------------------------------------------------------------";
+echo "A bridge escolhida foi: $bridge3"
+echo "";
+
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Configurando arquivo /etc/tor/torrc com:";
+echo "AutomapHostsOnResolve  1";
+echo "DNSPort                53530";
+echo "TransPort              9040";
+echo "UseBridges 1"
+echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed"
+echo "Bridge "$bridge" "
+echo "Bridge "$bridge2" "
+echo "Bridge "$bridge3" "
+echo "__________________________________________________________________________________________________________________________________________________";
+
+echo "#" > "$TORRC";
+# Adiciona as linhas ao final do arquivo torrc
+echo "#Configuração tor-bridger" > "$TORRC";
+{
+echo "#Tor - Configuração iptables para rotear toda a máquina com TOR + Bridges anti-censura!"
+echo "AutomapHostsOnResolve  1";
+echo "DNSPort                53530";
+echo "TransPort              9040";
+echo ""
+echo "UseBridges 1"
+echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed"
+echo "Bridge "$bridge" "
+echo "Bridge "$bridge2" "
+echo "Bridge "$bridge3" "
+} >> "$TORRC"
+
+echo "Linhas adicionadas ao arquivo $TORRC"
+echo;
+
+
+#DESABILITE A REDE PARA SEGURANÇA DA RECONFIGURAÇÃO
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Desabilitando a rede durante a configuração do iptables para rotear o tor...";
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "";
+echo "sudo nmcli networking off;";
+sudo nmcli networking off;
+echo "sudo service network-manager stop;";
+sudo service network-manager stop; 
+echo "sudo systemctl stop NetworkManager;";
+sudo systemctl stop NetworkManager;
+sudo echo "";
+
+
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Adicionando configurações de segurança do kernel linux...";
+echo "__________________________________________________________________________________________________________________________________________________";
+#Desabilitando o tráfego entre as placas - impede compartilhamento de conexão do pc para placa rj45 externa ou wifi de ponto de acesso
+#Precisa criar uma opção de script com sudo echo 1 > /proc/sys/net/ipv4/ip_forward; para permiter placa externa e ponto #de acesso funcionar.
+echo "sudo echo 0 > /proc/sys/net/ipv4/ip_forward;";
+sudo echo 0 > /proc/sys/net/ipv4/ip_forward;
+
+#Proteção contra ping, SYN Cookies, IP Spooﬁng e proteções do kernel
+echo "sudo echo 1 > /proc/sys/net/ipv4/tcp_syncookies;";
+sudo echo 1 > /proc/sys/net/ipv4/tcp_syncookies;
+
+# Syn Flood (DoS) # Port scanners
+echo "sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts; ";
+sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts; 
+
+#Redirecionamento seguro de pacotes
+echo "sudo echo 1 > $i/secure_redirects; ";
+sudo echo 1 > $i/secure_redirects; 
+
+# Broadcast echo protection enabled.
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/forwarding;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/forwarding;
+
+# Log strange packets.
+echo "sudo echo 1 > /proc/sys/net/ipv4/conf/all/log_martians;";
+sudo echo 1 > /proc/sys/net/ipv4/conf/all/log_martians;
+
+# Bad error message protection enabled..
+echo "sudo echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses; ";
+sudo echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses; 
+
+# IP spoofing protection.
+echo "sudo echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter;";
+sudo echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter;
+
+# Disable ICMP redirect acceptance.
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects;
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects;
+
+# Disable source routed packets.
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route;
+
+#Sem tracert e ping
+echo "sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all;";
+sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all;
+echo;
+
+#APAGA REGRAS, LIMPA IPTABLES
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Apagando regras do iptables -> sudo iptables -F, -X e -Z e todos os demais comandos para todas as tabelas..."
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo iptables -F  # Remove as regras de todas as chains
+sudo iptables -X  # Apaga todas as chains
+sudo iptables -Z  # Zera as regras de todas as chains
+
+sudo iptables -P INPUT ACCEPT;
+sudo iptables -P FORWARD ACCEPT;
+sudo iptables -P OUTPUT ACCEPT;
+
+sudo iptables -t filter -F;
+sudo iptables -t filter -X;
+sudo iptables -t filter -Z;
+
+sudo iptables -t nat -F;
+sudo iptables -t nat -X;
+sudo iptables -t nat -Z;
+
+sudo iptables -t mangle -F;
+sudo iptables -t mangle -X;
+sudo iptables -t mangle -Z;
+
+
+sudo iptables -t raw -F;
+sudo iptables -t raw -X;
+sudo iptables -t raw -Z;
+
+
+sudo echo "";
+
+
+#CONFIGURAÇÃO IPTABLES ROUTEADOR DE TOR SERVICE
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Adicionando regras no iptables para rotear toda a máquina na rede tor...";
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "";
+sudo iptables -t nat -P PREROUTING ACCEPT;
+sudo iptables -t nat -P INPUT ACCEPT;
+sudo iptables -t nat -P OUTPUT ACCEPT;
+sudo iptables -t nat -P POSTROUTING ACCEPT;
+
+# Don't allow Tor traffic to get stuck in a redirect loop...
+# TODO: Is `tor' your actual Tor user? It might be `debian-tor' or `toranon' or something else.
+
+sudo iptables -t nat -A OUTPUT -m owner --uid-owner $TOR_UID -j RETURN;
+sudo echo "";
+
+# Redirect DNS lookups to Tor.
+# TODO: Set this to your Tor DNSPort if it's not 53530.
+sudo iptables -t nat -A OUTPUT ! -o lo -p udp -m udp --dport 53 -j REDIRECT --to-ports 53530;
+
+# Do not redirect private networks or loopback.
+sudo iptables -t nat -A OUTPUT -d 10.0.0.0/8 -j RETURN;
+sudo iptables -t nat -A OUTPUT -d 172.16.0.0/12 -j RETURN;
+sudo iptables -t nat -A OUTPUT -d 192.168.0.0/16 -j RETURN;
+
+
+# Redirect HS connections to the TransPort.
+sudo iptables -t nat -A OUTPUT -d 127.192.0.0/10 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040;
+
+# Redirect all TCP traffic to Tor's TransPort.
+sudo iptables -t nat -A OUTPUT ! -o lo -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040;
+
+
+
+# Only accept anonymized network traffic in the filter table.
+sudo iptables -P INPUT DROP;
+sudo iptables -P FORWARD DROP;
+sudo iptables -P OUTPUT DROP;
+sudo iptables -N LAN;
+
+
+# Allow loopback
+sudo iptables -A INPUT -i lo -j ACCEPT;
+
+# Allow connections that are already established.
+sudo iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT;
+sudo iptables -A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT;
+
+# Reject incoming connections.
+sudo iptables -A INPUT -p udp -m conntrack --ctstate NEW -j REJECT --reject-with icmp-port-unreachable;
+sudo iptables -A INPUT -p tcp -m conntrack --ctstate NEW -j REJECT --reject-with tcp-reset;
+sudo iptables -A INPUT -j REJECT --reject-with icmp-port-unreachable;
+
+# Accept network traffic for the Tor service itself.
+# TODO: Tor user?
+sudo iptables -A OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT;
+
+# Accept DNS requests to the Tor DNSPort.
+sudo iptables -A OUTPUT -d 127.0.0.1/32 -p udp -m udp --dport 53530 -j ACCEPT;
+
+# Accept outgoing traffic to the local Tor TransPort.
+sudo iptables -A OUTPUT -d 127.0.0.1/32 -p tcp -m tcp --dport 9040 --tcp-flags FIN,SYN,RST,ACK SYN -j ACCEPT;
+
+# Accept outgoing traffic to the local Tor SOCKSPorts.
+sudo iptables -A OUTPUT -d 127.0.0.1/32 -p tcp -m tcp --dport 9050 --tcp-flags FIN,SYN,RST,ACK SYN -j ACCEPT;
+sudo iptables -A OUTPUT -d 127.0.0.1/32 -p tcp -m tcp --dport 9150 --tcp-flags FIN,SYN,RST,ACK SYN -j ACCEPT;
+
+# Accept connections on private networks.
+sudo iptables -A OUTPUT -d 10.0.0.0/8 -j LAN;
+sudo iptables -A OUTPUT -d 172.16.0.0/12 -j LAN;
+sudo iptables -A OUTPUT -d 192.168.0.0/16 -j LAN;
+sudo iptables -A LAN -p tcp -m tcp --dport 53 -j REJECT --reject-with icmp-port-unreachable;
+sudo iptables -A LAN -p udp -m udp --dport 53 -j REJECT --reject-with icmp-port-unreachable;
+sudo iptables -A LAN -j ACCEPT;
+
+# Reject all other outgoing traffic.
+sudo iptables -A OUTPUT -j REJECT --reject-with icmp-port-unreachable;
+echo;
+
+#Novas regras do firewall adicionadas;
+sudo echo "";
+echo "############################ LISTA REGRAS IPTABLES ############################"
+sudo echo "";
+sudo echo "############################ Table Filter ############################";
+sudo iptables -t filter -S;
+sudo echo "";
+
+sudo echo "############################ Table Nat ############################";
+sudo iptables -t nat -S;
+sudo echo "";
+
+sudo echo "############################ Table Mangle ############################";
+sudo iptables -t mangle -S;
+sudo echo "";
+
+sudo echo "############################ Table Raw ############################";
+sudo iptables -t raw -S;
+sudo echo "############################ FIM LISTAR REGRAS IPTABLES ############################";
+sudo echo "";
+
+#REATIVA NETWORK REDE
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Reativando rede...";
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "";
+sudo echo "";
+echo "sudo service network-manager restart;";
+sudo service network-manager restart; 
+echo "sudo systemctl restart NetworkManager;";
+sudo systemctl restart NetworkManager;
+echo "sudo nmcli networking off;";
+sudo nmcli networking off;
+echo "sudo nmcli networking on;";
+sudo nmcli networking on;
+echo;
+
+#Certifique que o tor serviço está rodando. Faça de 5 a 10 vezes para impedir bug de falhar na primeira configuração. Geralmente ocorre de não entrar rede tor no primeiro restart do tor.service. Se não funcionar, restart o tor.services 10 vezes!
+#novo ip, restartando 1
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Restando o serviço tor 3 vezes para testes... Teste 1";
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Desabilitando o tor hidden service";
+sudo echo "sudo systemctl disable tor.service;";
+sudo systemctl disable tor.service;
+sudo echo "Parando o tor hidden service";
+sudo echo "sudo systemctl stop tor.service;";
+sudo systemctl stop tor.service;
+sudo echo "Restartando o tor hidden service";
+sudo echo "sudo systemctl enable tor.service;";
+sudo systemctl enable tor.service;
+sudo echo "";
+sudo echo "sudo systemctl start tor.service;";
+sudo systemctl start tor.service;
+sudo echo "";
+sudo echo "sudo systemctl is-active tor.service;";
+sudo systemctl is-active tor.service;
+sudo echo "";
+
+echo "Checando ip tor do nó de saída no primeiro teste";
+#echo "wget -qO - icanhazip.com;"
+echo "wget -qO - icanhazip.com;";
+wget -qO - icanhazip.com;
+echo;
+
+#novo ip restartando 2.
+sudo echo "Desabilitando o tor hidden service";
+sudo echo "sudo systemctl disable tor.service;";
+sudo systemctl disable tor.service;
+sudo echo "Parando o tor hidden service";
+sudo echo "sudo systemctl stop tor.service;";
+sudo systemctl stop tor.service;
+sudo echo "Restartando o tor hidden service";
+sudo echo "sudo systemctl enable tor.service;";
+sudo systemctl enable tor.service;
+sudo echo "";
+sudo echo "sudo systemctl start tor.service;";
+sudo systemctl start tor.service;
+sudo echo "";
+sudo echo "sudo systemctl is-active tor.service;";
+sudo systemctl is-active tor.service;
+sudo echo "";
+
+echo "Checando ip tor do nó de saída no segundo teste";
+#echo "wget -qO - icanhazip.com;"
+echo "wget -qO - icanhazip.com;";
+wget -qO - icanhazip.com;
+echo;
+
+#novo ip, restartando 3
+sudo echo "Desabilitando o tor hidden service";
+sudo echo "sudo systemctl disable tor.service;";
+sudo systemctl disable tor.service;
+sudo echo "Parando o tor hidden service";
+sudo echo "sudo systemctl stop tor.service;";
+sudo systemctl stop tor.service;
+sudo echo "Restartando o tor hidden service";
+sudo echo "sudo systemctl enable tor.service;";
+sudo systemctl enable tor.service;
+sudo echo "";
+sudo echo "sudo systemctl start tor.service;";
+sudo systemctl start tor.service;
+sudo echo "";
+sudo echo "sudo systemctl is-active tor.service;";
+sudo systemctl is-active tor.service;
+sudo echo "";
+
+echo "Checando ip tor do nó de saída no terceiro teste";
+#echo "wget -qO - icanhazip.com;"
+echo "wget -qO - icanhazip.com;";
+wget -qO - icanhazip.com;
+echo;
+echo;
+
+echo "__________________________________________________________________________________________________________________________________________________";
+#Checar se está vazando DNS por https://dnsleaktest.com
+sudo echo "#Cheque se está vazando DNS por https://dnsleaktest.com";
+#firefox https://dnsleaktest.com;
+sudo echo "";
+echo "__________________________________________________________________________________________________________________________________________________";
+
+echo;
+echo;
+
+echo "__________________________________________________________________________________________________________________________________________________";
+#Checar legitimidade do ip tor por https://check.torproject.org
+sudo echo "#Cheque legitimidade do ip tor por https://check.torproject.org";
+#firefox https://check.torproject.org;
+sudo echo "";
+echo "__________________________________________________________________________________________________________________________________________________";
+
+
+echo;
+echo;
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Possíveis problemas que podem suceder com esse script";
+echo "Arquivo /etc/tor/torrc pode ter sido modificado! Corrija";
+echo "Uid do debian-tor cadastrada errada. Comandos para checar: id -u debian-tor; id -u tor; id -u toranon; -> Precisa modificar o código se estiver diferente!";
+echo;
+echo;
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "O algorítimo de configuração em /etc/tor/torrc, se repetido mais de uma vez acumulará códigos comentados, e para evitar duplicatas de códigos aumentando o tamanho do arquivo, caso deseje apagar vá até o final do arquivo e apague.";
+sudo echo "Digite sudo nano /etc/tor/torrc;";
+echo;
+echo;
+sudo echo "ATENÇÃO: Às vezes o tor hidden service não entra rede de primeira, então desabilite e restart o tor service manualmente 10 vezes com sudo systemctl restart tor.service;"
+echo "__________________________________________________________________________________________________________________________________________________";
+
+sudo echo;
+
+    
+    
+    
+    
+    ##############
+    ##############
+    
+else
+echo;
+    echo "obfs4proxy não está instalado."
+    echo "Por favor, instale o obfs4proxy antes de continuar."
+    echo "Você pode baixar o pacote do obfs4proxy aqui:"
+    echo "http://security.debian.org/debian-security/pool/updates/main/o/obfs4proxy/"
+    echo "Depois de baixar o pacote .deb, instale-o com o comando: sudo dpkg -i caminho/para/o/pacote.deb"
+    echo "E resolva quaisquer dependências com: sudo apt --fix-broken install"
+    exit 1
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############Script################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

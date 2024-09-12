@@ -1,0 +1,114 @@
+#!/bin/bash
+#bridgeson
+#aviso
+
+#Checando se o obsf4proxy está instalado:
+#!/bin/bash
+
+
+#!/bin/bash
+
+# Função para verificar se obfs4proxy está instalado
+check_obfs4proxy() {
+    if command -v obfs4proxy >/dev/null 2>&1; then
+        return 0 # obfs4proxy está instalado
+    else
+           return 1 # obfs4proxy não está instalado
+    fi
+}
+
+# Verifica se obfs4proxy está instalado
+if check_obfs4proxy; then
+echo;
+    echo "obfs4proxy está instalado."
+     
+    ##############
+    ##############
+  
+echo "";
+echo "O arquivo /etc/tor/torrc terá bridges adicionadas, e isso poderá causar conflitos no tor e ele não funcionará dependendo de suas configurações. Se usar o torrc original, tudo tende a funcionar plenamente!"
+
+# Pergunta se o usuário deseja continuar
+read -p "Quer continuar? (s/n) " resposta
+
+# Se a resposta for 'sim', continua com a mensagem 2, caso contrário, encerra o script
+if [ "$resposta" == "s" ]; then
+   
+
+echo "Backup de torrc em /etc/tor/torrc";
+echo "sudo cp -r /etc/tor/torrc /etc/tor/torrc.bridges.bak";
+sudo cp -r /etc/tor/torrc /etc/tor/torrc.bridges.bak
+echo "";
+
+echo "";
+echo "Bridges devem ser copiadas inteiras e adicionado no comando abaixo.";
+echo "Exemplo1: obfs4 89.10.110.191:7624 7EC3CE9AB0640524C77FCF361C85E50A9E07F506 cert=i9s53eikMKz4BiU/yYyFpJaBfGm/9xvNf97dnkI6iPg3Ls5TRoyOwhaIQprLgPruBf/zYA iat-mode=2";
+echo;
+echo "Colete bridges em https://bridges.torproject.org/bridges";
+echo "--------------------------------------------------------------";
+read -rp "Digite a Bridge que deseja cadastrar no torrc:" bridge
+echo "--------------------------------------------------------------";
+echo "A bridge escolhida foi: $bridge"
+echo "";
+
+
+
+#Usar bridges
+echo "Adicionando a bridge no arquivo torrc";
+echo "" >> /etc/tor/torrc; 
+echo "UseBridges 1" >> /etc/tor/torrc; 
+echo "ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy managed" >> /etc/tor/torrc; 
+echo "Bridge "$bridge" " >> /etc/tor/torrc; 
+echo "" >> /etc/tor/torrc; 
+echo;
+
+
+#Restartando o tor hidden service
+sudo echo "Desabilitando o tor hidden service";
+sudo echo "sudo systemctl disable tor.service;";
+sudo systemctl disable tor.service;
+sudo echo "Parando o tor hidden service";
+sudo echo "sudo systemctl stop tor.service;";
+sudo systemctl stop tor.service;
+sudo echo "Restartando o tor hidden service";
+sudo echo "sudo systemctl enable tor.service;";
+sudo systemctl enable tor.service;
+sudo echo "";
+sudo echo "sudo systemctl start tor.service;";
+sudo systemctl start tor.service;
+sudo echo "";
+sudo echo "sudo systemctl is-active tor.service;";
+sudo systemctl is-active tor.service;
+sudo echo "";
+   
+   
+   
+   
+   
+   
+else
+    exit 0
+fi
+
+    ##############
+    ##############
+    
+else
+echo;
+    echo "obfs4proxy não está instalado."
+    echo "Por favor, instale o obfs4proxy antes de continuar."
+    echo "Você pode baixar o pacote do obfs4proxy aqui:"
+    echo "http://security.debian.org/debian-security/pool/updates/main/o/obfs4proxy/"
+    echo "Depois de baixar o pacote .deb, cheque os hashs, instale-o com o comando: sudo dpkg -i caminho/para/o/pacote.deb"
+    echo "E resolva quaisquer dependências com: sudo apt --fix-broken install"
+    exit 1
+fi
+
+
+
+
+
+
+
+
+###fim script

@@ -1,0 +1,9 @@
+#!/bin/bash
+#bridgesoff
+
+
+
+echo "Restaurando Backup de torrc em /etc/tor/torrc de /etc/tor/torrc.bridges.bak";
+echo "sudo cp -r /etc/tor/torrc.bridges.bak /etc/tor/torrc";
+sudo cp -r /etc/tor/torrc.bridges.bak /etc/tor/torrc;
+echo "";

@@ -1,0 +1,214 @@
+#!/bin/bash
+##############Script################################
+#DESLIGA TOR SERVICE, LIGA FIREWALL BÁSICO
+
+echo "__________________________________________________________________________________________________________________________________________________";
+#Certifique que o tor serviço está rodando;
+echo "Parando o tor service...";
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "sudo systemctl stop tor.service;";
+sudo systemctl stop tor.service;
+sudo echo "";
+sudo echo "sudo systemctl disable tor.service;";
+sudo systemctl disable tor.service;
+sudo echo "";
+sudo echo "sudo systemctl is-active tor.service;";
+sudo systemctl is-active tor.service;
+sudo echo "";
+
+##############Script################################
+
+
+#Apaga arquivo torrc modificado e recoloca original no lugar!
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Restaurando arquivo /etc/tor/torrc do backup original...";
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "sudo rm -rf /etc/tor/torrc;";
+sudo rm -rf /etc/tor/torrc;
+echo "sudo cp -r /etc/tor/torrc.bak /etc/tor/torrc;";
+sudo cp -r /etc/tor/torrc.bak /etc/tor/torrc;
+echo;
+
+#DESABILITE A REDE PARA SEGURANÇA DA RECONFIGURAÇÃO
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Desabilitando a rede para configurações do iptables sem o tor: [ścript block_input]";
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "";
+sudo echo "sudo nmcli networking off;";
+sudo service network-manager stop; 
+echo "sudo systemctl stop NetworkManager;";
+sudo systemctl stop NetworkManager;
+echo "sudo nmcli networking off;";
+sudo nmcli networking off;
+sudo echo "";
+
+#IPTABLES CONFIGURAÇÃO PRINCIPAL - 
+
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Adicionando configurações de segurança do kernel linux...";
+echo "__________________________________________________________________________________________________________________________________________________";
+#Desabilitando o tráfego entre as placas - impede compartilhamento de conexão do pc para placa rj45 externa ou wifi de ponto de acesso
+#Precisa criar uma opção de script com sudo echo 1 > /proc/sys/net/ipv4/ip_forward; para permiter placa externa e ponto #de acesso funcionar.
+echo "sudo echo 0 > /proc/sys/net/ipv4/ip_forward;";
+sudo echo 0 > /proc/sys/net/ipv4/ip_forward;
+
+#Proteção contra ping, SYN Cookies, IP Spooﬁng e proteções do kernel
+echo "sudo echo 1 > /proc/sys/net/ipv4/tcp_syncookies;";
+sudo echo 1 > /proc/sys/net/ipv4/tcp_syncookies;
+
+# Syn Flood (DoS) # Port scanners
+echo "sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts; ";
+sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts; 
+
+#Redirecionamento seguro de pacotes
+echo "sudo echo 1 > $i/secure_redirects; ";
+sudo echo 1 > $i/secure_redirects; 
+
+# Broadcast echo protection enabled.
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/forwarding;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/forwarding;
+
+# Log strange packets.
+echo "sudo echo 1 > /proc/sys/net/ipv4/conf/all/log_martians;";
+sudo echo 1 > /proc/sys/net/ipv4/conf/all/log_martians;
+
+# Bad error message protection enabled..
+echo "sudo echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses; ";
+sudo echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses; 
+
+# IP spoofing protection.
+echo "sudo echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter;";
+sudo echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter;
+
+# Disable ICMP redirect acceptance.
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects;
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects;
+
+# Disable source routed packets.
+echo "sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route;";
+sudo echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route;
+
+#Sem tracert e ping
+echo "sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all;";
+sudo echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all;
+echo;
+
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Apagando regras do iptables sudo iptables -F, -X e -Z e outros comandos para todas as tabelas..."
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo iptables -F  # Remove as regras de todas as chains
+sudo iptables -X  # Apaga todas as chains
+sudo iptables -Z  # Zera as regras de todas as chains
+
+sudo iptables -P INPUT ACCEPT;
+sudo iptables -P FORWARD ACCEPT;
+sudo iptables -P OUTPUT ACCEPT;
+
+sudo iptables -t filter -F;
+sudo iptables -t filter -X;
+sudo iptables -t filter -Z;
+
+sudo iptables -t nat -F;
+sudo iptables -t nat -X;
+sudo iptables -t nat -Z;
+
+sudo iptables -t mangle -F;
+sudo iptables -t mangle -X;
+sudo iptables -t mangle -Z;
+
+
+sudo iptables -t raw -F;
+sudo iptables -t raw -X;
+sudo iptables -t raw -Z;
+
+
+sudo echo "";
+
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Configurando iptables [script block_input]...";
+echo "__________________________________________________________________________________________________________________________________________________";
+# Definindo políticas padrões
+######################
+sudo iptables  -P  INPUT DROP  # iptables a política padrão da chain INPUT é proibir tudo
+sudo iptables  -P  FORWARD DROP
+sudo iptables  -P  OUTPUT ACCEPT
+
+
+# Liberando a Loopback
+####################
+sudo iptables -A  INPUT -i lo -j ACCEPT
+sudo iptables -A  FORWARD -i lo -j DROP
+
+## Regras de segurança na internet e acessos
+## ethx tem que mudar, use ifconfig e cheque qual é, no caso ether
+#####################################
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j DROP
+
+#Bloqueando novas conexões e conexões invalidas após ter a conexão estabelecida e relatada
+sudo iptables -A INPUT -m state --state INVALID -j DROP
+sudo iptables -A FORWARD -m state --state INVALID -j DROP
+sudo iptables -A INPUT -m state --state NEW -j DROP
+
+#SOMENTE PCS DENTRO DA REDE PODEM SE CONECTAR
+sudo iptables -A INPUT -p tcp --syn -s 192.168.0.0/255.255.255.0 -j ACCEPT;
+sudo iptables -A INPUT -p tcp --syn -j DROP;
+sudo iptables -A INPUT -i ppp0 -p udp --dport 0:30000 -j DROP;
+
+sudo echo "";
+
+#REATIVA NETWORK REDE
+echo "Reativando rede...";
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "";
+sudo echo "";
+echo "sudo service network-manager restart;";
+sudo service network-manager restart; 
+echo "sudo systemctl restart NetworkManager;";
+sudo systemctl restart NetworkManager;
+echo "sudo nmcli networking off;";
+sudo nmcli networking off;
+echo "sudo nmcli networking on;";
+sudo nmcli networking on;
+echo;
+
+#LISTA REGRAS FIREWALL
+sudo echo "";
+echo "############################ LISTA REGRAS IPTABLES ############################"
+sudo echo "";
+sudo echo "############################ Table Filter ############################";
+sudo iptables -t filter -S;
+sudo echo "";
+
+sudo echo "############################ Table Nat ############################";
+sudo iptables -t nat -S;
+sudo echo "";
+
+sudo echo "############################ Table Mangle ############################";
+sudo iptables -t mangle -S;
+sudo echo "";
+
+sudo echo "############################ Table Raw ############################";
+sudo iptables -t raw -S;
+sudo echo "############################ FIM LISTAR REGRAS IPTABLES ############################";
+sudo echo "";
+
+
+echo "__________________________________________________________________________________________________________________________________________________";
+echo "Checando ip...";
+echo "__________________________________________________________________________________________________________________________________________________";
+#echo "wget -qO - icanhazip.com;"
+echo "wget -qO - icanhazip.com;";
+wget -qO - icanhazip.com;
+echo;
+
+echo "__________________________________________________________________________________________________________________________________________________";
+sudo echo "Cheque com sudo nano /etc/tor/torrc; Cheque se o arquivo torrc está como o original periodicamente por segurança";
+echo "__________________________________________________________________________________________________________________________________________________";
+
+echo;
+
+
+
