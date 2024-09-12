@@ -74,6 +74,9 @@ Para manter aumentar a chance de anonimidade plena, é preciso usar a técnica d
 
 
 ##########################################################################################
+
+
+
 REQUISITO: OBFS4PROXY
 
 ***Instalação obfs4proxy para rotear usar as bridges no tor hidden service no Linux Debian
