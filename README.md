@@ -153,7 +153,8 @@ Página oficial de segurança digital:
 https://traderprofissional.com.br/seguranca-digital.aspx
 
 
-Vídeo tutorial youtube: atualizando...
+Vídeo tutorial youtube do Tor-bridger
+https://www.youtube.com/watch?v=piYLFIug6ho&t=3573s
 
 
 
