@@ -1,0 +1,68 @@
+#!/bin/bash
+
+####
+#### Modo com grep...
+echo;
+echo "Checkbridges.sh";
+echo "Checar se conexões de bridges cadastradas no Tor Hidden Service ou TorBrowser estão ativas";
+echo;
+read -p "Digite o IP da bridge que deseja checar: " ip
+echo "Aguarde alguns segundos para finalizar as capturas...";
+
+echo ;
+echo "nmcli connection show" ;
+nmcli connection show ;
+
+echo ;
+echo "sudo cat /proc/net/nf_conntrack | grep \"$ip\""
+for i in {1..10}; do
+    
+    sudo cat /proc/net/nf_conntrack | grep "$ip"
+    sleep 5
+done
+
+echo ;
+echo "sudo ss -tus | grep \"$ip\""
+for i in {1..11}; do
+   
+    sudo ss -tus | grep "$ip"
+    sleep 5
+done
+
+
+
+echo ;
+echo "sudo lsof -i | grep \"$ip\""
+for i in {1..3}; do
+    
+    sudo lsof -i | grep "$ip"
+    sleep 5
+done
+
+
+echo ;
+echo "sudo lsof -nP -iTCP -sTCP:LISTEN | grep \"$ip\""
+for i in {1..3}; do
+   
+    sudo lsof -nP -iTCP -sTCP:LISTEN | grep "$ip"
+    sleep 5
+done
+
+
+echo;
+echo "Para maiores detalhes, instale o tcpdump e execute";
+echo "sudo tcpdump -nn -v host "$ip"";
+echo "Ou para filtrar em todas as interfaces se a bridge se comunica, use o tcpdump-bridges em https://github.com/leandroibov/tor-bridger";
+echo "";
+echo "";
+
+
+
+#Outras opções com tcpdump, precisa instalar...
+#read -p "Digite o IP da bridge que deseja checar: " ip
+#sudo tcpdump host "$ip"
+#sudo tcpdump -nn -v host "$ip"
+
+
+
+

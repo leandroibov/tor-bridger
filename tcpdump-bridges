@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Função para verificar se o tcpdump está instalado
+check_and_install_tcpdump() {
+    if ! command -v tcpdump &> /dev/null; then
+        echo "tcpdump não está instalado. Instalando agora..."
+        sudo apt-get update
+        sudo apt-get install -y tcpdump
+    else
+        echo "tcpdump já está instalado."
+    fi
+}
+
+# Verifica e instala tcpdump se necessário
+check_and_install_tcpdump
+
+# Solicita o IP da bridge
+read -p "Digite o IP da bridge que deseja checar: " ip
+echo "Aperte Ctrl + C para finalizar o teste quando desejar."
+echo;
+
+# Lista todas as interfaces de rede
+interfaces=$(ls /sys/class/net)
+
+# Itera sobre cada interface e executa tcpdump
+for iface in $interfaces; do
+    # Ignora interfaces que não são válidas para captura (como lo)
+    if [[ "$iface" != "lo" ]]; then
+        echo "Capturando pacotes na interface $iface..."
+        sudo tcpdump -i "$iface" -nn -e -v host "$ip" &
+    fi
+done
+
+# Aguarda o usuário pressionar Ctrl+C para encerrar todas as capturas
+wait
