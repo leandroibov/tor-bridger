@@ -16,6 +16,10 @@ b41047c971a128b27b7fec7dd234cbab1067d815b7fa64a245a1fb3e719a66b3  tor-bridger2
 
 de2713ce1682a9029ef5b1967a765beafc340b0aa018e61b9bddcfc950e0a871  tor-bridger3
 
+318a6cb03dabd6c2639cf2dbb5875eb921239d61cf55eb3d2a292c28f46cf983  checkbridges
+
+cd3e5da2df3d1dd67db902c4e22767e487b06df6d4cdd458446086667fd726cc  tcpdump-bridges
+
 
 
 ##########################################################################################
@@ -132,6 +136,39 @@ sudo dpkg --purge nome-do-pacote;
 
 sudo apt-get install -f;
 
+
+##########################################################################################
+
+
+CHECAR SE BRIDGES ESTÃO CONECTADAS
+
+
+chmod +x checkbridges
+
+Executar: 
+
+./checkbridges
+
+ou
+
+cp -r checkbridges /bin
+
+
+E bastará digitar checkbridges de qualquer localização do terminal.
+
+
+Coloque o número da bridge (somente o ip), e o programará filtrará e indicará as conexões ativas.
+
+
+Ele usa programas nativos do linux como /proc/net/nf_conntrack, lsof e ss!
+
+Para rastrear com o tcpdump, use o script tcpdump-bridges!
+
+chmod +x tcpdump-bridges
+
+./tcpdump-bridges
+
+Adicione o número da bridge para rastrear as conexões!
 
 
 
