@@ -170,6 +170,15 @@ chmod +x tcpdump-bridges
 
 Adicione o número da bridge para rastrear as conexões!
 
+Com o wireshark faça os seguintes comandos:
+
+ip.addr == ip_da_bridge
+
+ip.src == ip_da_bridge
+
+ip.dst == ip_da_bridge
+
+
 
 
 
