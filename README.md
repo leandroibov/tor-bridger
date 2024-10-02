@@ -1,14 +1,10 @@
 
-##########################################################################################
-
-Como usar:
+# Como usar:
 
 sudo chmod +x bridgeson bridgeson2 bridgeson3 bridgesoff tor-bridger tor-bridger2 tor-bridger3 parator-bridger;
 
 
-##########################################################################################
-
-O que faz cada script
+#### O que faz cada script
 
 bridgeson -> Cadastra um bridge no arquivo /etc/tor/torrc do tor hidden service
 
@@ -28,8 +24,7 @@ parator-bridger -> Remove as bridges do torrc, apaga regras iptables para rotear
 
 
 
-##########################################################################################
-Execução, copie para o /bin
+#### Execução, copie para o /bin
 
 navegue até a pasta com os scripts e:
 
@@ -46,19 +41,14 @@ sudo ./script_desejado
 sudo ./tor-bridger3
 
 
-##########################################################################################
 
-ALERTA:
+##### ALERTA:
 
 Para manter aumentar a chance de anonimidade plena, é preciso usar a técnica de mac spoofing de fabricantes, visite meu site para aprender!
 
 
 
-##########################################################################################
-
-
-
-REQUISITO: OBFS4PROXY
+## REQUISITO: OBFS4PROXY
 
 ***Instalação obfs4proxy para rotear usar as bridges no tor hidden service no Linux Debian
 
@@ -114,10 +104,9 @@ sudo dpkg --purge nome-do-pacote;
 sudo apt-get install -f;
 
 
-##########################################################################################
 
 
-CHECAR SE BRIDGES ESTÃO CONECTADAS
+## CHECAR SE BRIDGES ESTÃO CONECTADAS
 
 
 chmod +x checkbridges
@@ -156,27 +145,22 @@ ip.src == ip_da_bridge
 ip.dst == ip_da_bridge
 
 
-
-
-
-
-
-
 ##########################################################################################
 
 
 
 
-Doe monero para nos ajudar: 87JGuuwXzoMGwQAcSD7cvS7D7iacPpN2f5bVqETbUvCgdEmrPZa12gh5DSiKKRgdU7c5n5x1UvZLj8PQ7AAJSso5CQxgjak
+# Doe monero para nos ajudar: 
 
+### 87JGuuwXzoMGwQAcSD7cvS7D7iacPpN2f5bVqETbUvCgdEmrPZa12gh5DSiKKRgdU7c5n5x1UvZLj8PQ7AAJSso5CQxgjak
 
 Página oficial de segurança digital:
-
 
 https://traderprofissional.com.br/seguranca-digital.aspx
 
 
-Vídeo tutorial youtube do Tor-bridger
+##### Vídeo tutorial youtube do Tor-bridger
+
 https://www.youtube.com/watch?v=piYLFIug6ho&t=3573s
 
 
