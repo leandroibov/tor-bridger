@@ -145,14 +145,12 @@ ip.src == ip_da_bridge
 ip.dst == ip_da_bridge
 
 
-##########################################################################################
 
 
 
+# Doe monero para nos ajudar: (donate XMR)
 
-# Doe monero para nos ajudar: 
-
-### 87JGuuwXzoMGwQAcSD7cvS7D7iacPpN2f5bVqETbUvCgdEmrPZa12gh5DSiKKRgdU7c5n5x1UvZLj8PQ7AAJSso5CQxgjak
+    87JGuuwXzoMGwQAcSD7cvS7D7iacPpN2f5bVqETbUvCgdEmrPZa12gh5DSiKKRgdU7c5n5x1UvZLj8PQ7AAJSso5CQxgjak
 
 Página oficial de segurança digital:
 
